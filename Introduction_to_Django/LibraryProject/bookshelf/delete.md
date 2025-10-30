@@ -1,3 +1,7 @@
+# delete.md
+
+from bookshelf.models import Book
+
 # Retrieve the updated book
 book = Book.objects.get(title="Nineteen Eighty-Four")
 
