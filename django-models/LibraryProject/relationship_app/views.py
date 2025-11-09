@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Book, Library
 from django.views import View
+from django.views.generic import DetailView
+
 
 
 
@@ -13,10 +15,9 @@ def library_detail(request, pk):
     return render(request, 'relationship_app/library_detail.html', {'library': library})
 
 
-class LibraryDetailView(View):
-    template_name = 'relationship_app/library_detail.html'
+class LibraryDetailView(DetailView):
+    model = Library
+    template_name = "relationship_app/library_detail.html"
+    context_object_name = "library"
 
-    def get(self, request, pk):
-        library = get_object_or_404(Library, pk=pk)
-        return render(request, self.template_name, {'library': library})
 
