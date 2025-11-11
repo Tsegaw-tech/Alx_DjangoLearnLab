@@ -16,6 +16,7 @@ def library_detail(request, pk):
 
 
 class LibraryDetailView(DetailView):
+    """Display a single library and all its books."""
     model = Library
     template_name = "relationship_app/library_detail.html"
     context_object_name = "library"
