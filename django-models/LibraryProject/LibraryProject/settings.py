@@ -53,6 +53,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'LibraryProject.urls'
 
+LOGIN_URL = 'relationship_app:login'
+LOGIN_REDIRECT_URL = 'relationship_app:list_books'
+LOGOUT_REDIRECT_URL = 'relationship_app:login'
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

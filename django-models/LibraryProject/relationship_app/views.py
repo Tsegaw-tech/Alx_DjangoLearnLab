@@ -3,6 +3,12 @@ from django.views.generic.detail import DetailView
 from .models import Book
 from .models import Library
 
+from django.shortcuts import  redirect
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+
+
 
 def list_books(request):
     books = Book.objects.all()
@@ -21,3 +27,34 @@ class LibraryDetailView(DetailView):
     context_object_name = "library"
 
 
+# ✅ User Registration View
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # automatically log in after registration
+            return redirect('relationship_app:list_books')
+    else:
+        form = UserCreationForm()
+    return render(request, 'relationship_app/register.html', {'form': form})
+
+
+# ✅ User Login View
+def user_login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('relationship_app:list_books')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'relationship_app/login.html', {'form': form})
+
+
+# ✅ User Logout View
+@login_required
+def user_logout(request):
+    logout(request)
+    return render(request, 'relationship_app/logout.html')
