@@ -1,22 +1,24 @@
 from django.shortcuts import render, get_object_or_404
-from django.views.generic import DetailView
 from .models import Book, Library
+from django.views import View
+from django.views.generic import DetailView
 
-# -------------------------------
-# Function-based view
-# -------------------------------
+
+
+
 def list_books(request):
-    """List all books and their authors."""
-    books = Book.objects.select_related('author').all()
-    context = {'books': books}
-    return render(request, 'relationship_app/list_books.html', context)
+    books = Book.objects.all()
+    return render(request, 'relationship_app/list_books.html', {'books': books})
+
+def library_detail(request, pk):
+    library = get_object_or_404(Library, pk=pk)
+    return render(request, 'relationship_app/library_detail.html', {'library': library})
 
 
-# -------------------------------
-# Class-based view
-# -------------------------------
 class LibraryDetailView(DetailView):
     """Display a single library and all its books."""
     model = Library
-    template_name = 'relationship_app/library_detail.html'
-    context_object_name = 'library'
+    template_name = "relationship_app/library_detail.html"
+    context_object_name = "library"
+
+
