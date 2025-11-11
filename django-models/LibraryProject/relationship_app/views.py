@@ -40,21 +40,5 @@ def register(request):
     return render(request, 'relationship_app/register.html', {'form': form})
 
 
-# ✅ User Login View
-def user_login(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('relationship_app:list_books')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'relationship_app/login.html', {'form': form})
 
 
-# ✅ User Logout View
-@login_required
-def user_logout(request):
-    logout(request)
-    return render(request, 'relationship_app/logout.html')
