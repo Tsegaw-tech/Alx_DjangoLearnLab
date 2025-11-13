@@ -62,6 +62,7 @@ LOGOUT_REDIRECT_URL = 'relationship_app:login'
 AUTH_USER_MODEL = 'users.CustomUser'
 
 
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

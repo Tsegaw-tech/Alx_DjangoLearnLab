@@ -7,6 +7,7 @@ from django.conf import settings
 
 
 
+
 class Author(models.Model):
     name = models.CharField(max_length=100)
 
@@ -48,21 +49,22 @@ class Librarian(models.Model):
 
 
 
+
+
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('Admin', 'Admin'),
         ('Librarian', 'Librarian'),
         ('Member', 'Member'),
     ]
-    
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,  # Use the custom user model
-        on_delete=models.CASCADE
-    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Member')
 
     def __str__(self):
         return f"{self.user.username} - {self.role}"
+
+
+
 
 # Automatically create UserProfile when a new User is created
 @receiver(post_save, sender=User)
