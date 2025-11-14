@@ -98,6 +98,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True    # Prevents browsers from MIME-sniffing res
 SECURE_BROWSER_XSS_FILTER = True      # Enables browser XSS protection
 
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 
