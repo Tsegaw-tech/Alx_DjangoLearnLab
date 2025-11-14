@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bookshelf',
     'relationship_app',
-    'users',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -59,7 +59,10 @@ LOGIN_REDIRECT_URL = 'relationship_app:list_books'
 LOGOUT_REDIRECT_URL = 'relationship_app:login'
 
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = "accounts.CustomUser"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 
