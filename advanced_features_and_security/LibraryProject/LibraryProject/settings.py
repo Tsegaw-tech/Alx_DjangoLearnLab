@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'bookshelf',
     'relationship_app',
     'csp',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -71,22 +72,31 @@ DEBUG = False  # Change to True only during local development
 # Allowed hosts
 ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']
 
-# Browser protections
-SECURE_BROWSER_XSS_FILTER = True
-X_FRAME_OPTIONS = 'DENY'
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# -----------------------------
+# HTTPS and Secure Redirects
+# -----------------------------
 
-# Enforce HTTPS for cookies
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+# Redirect all HTTP requests to HTTPS
+SECURE_SSL_REDIRECT = True  # Ensures that all non-HTTPS requests are automatically redirected to HTTPS
 
-# Optional: redirect all HTTP to HTTPS
-SECURE_SSL_REDIRECT = True
+# HTTP Strict Transport Security (HSTS) settings
+SECURE_HSTS_SECONDS = 31536000  # Tell browsers to use HTTPS only for 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to all subdomains
+SECURE_HSTS_PRELOAD = True  # Allows the site to be included in browser preload lists
 
-# Optional: HSTS headers
-SECURE_HSTS_SECONDS = 3600  # adjust based on deployment
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# -----------------------------
+# Secure Cookies
+# -----------------------------
+SESSION_COOKIE_SECURE = True  # Ensures session cookies are sent only over HTTPS
+CSRF_COOKIE_SECURE = True     # Ensures CSRF cookies are sent only over HTTPS
+
+# -----------------------------
+# Additional Security Headers
+# -----------------------------
+X_FRAME_OPTIONS = 'DENY'              # Prevents clickjacking by disallowing framing
+SECURE_CONTENT_TYPE_NOSNIFF = True    # Prevents browsers from MIME-sniffing responses
+SECURE_BROWSER_XSS_FILTER = True      # Enables browser XSS protection
+
 
 
 
