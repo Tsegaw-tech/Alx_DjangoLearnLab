@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import permission_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 from .models import Book
+from .forms import ExampleForm
+
 
 # -----------------------------
 # Forms for secure input handling
@@ -61,3 +63,22 @@ def delete_book(request, book_id):
         book.delete()
         return redirect('book_list')
     return render(request, 'bookshelf/delete_book.html', {'book': book})
+
+
+
+# View to display and handle ExampleForm
+@permission_required('bookshelf.can_create', raise_exception=True)
+def example_form_view(request):
+    if request.method == 'POST':
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Process the form data
+            data = form.cleaned_data
+            # For demonstration, let's say ExampleForm has 'name' and 'email'
+            print(f"Received name: {data['name']}, email: {data['email']}")
+            # You could save data to a model here if needed
+            return redirect('relationship_app:list_books')  # redirect after success
+    else:
+        form = ExampleForm()  # empty form for GET request
+
+    return render(request, 'bookshelf/form_example.html', {'form': form})
