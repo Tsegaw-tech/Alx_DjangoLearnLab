@@ -1,13 +1,12 @@
 from django.shortcuts import render
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from .models import Book
 from .serializers import BookSerializer
+from django_filters.rest_framework import DjangoFilterBackend
 
-# Create your views here.
-from rest_framework import generics, permissions
-from .models import Book
-from .serializers import BookSerializer
+
+
 
 """
 Book CRUD API using Django REST Framework Generic Views.
@@ -18,9 +17,33 @@ updating, and deleting books with minimal code.
 
 # GET /books/ — List all Books
 class BookListView(generics.ListAPIView):
+    """
+    BookListView supports:
+    - Filtering (title, author, publication_year)
+    - Searching (title, author__name)
+    - Ordering (title, publication_year)
+    """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]  # Public (Read-only)
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    # Enable filtering, searching, and ordering
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+
+    # Filtering: /books/?title=ABC&publication_year=2020
+    filterset_fields = ['title', 'publication_year', 'author']
+
+    # Searching: /books/?search=chinua
+    search_fields = ['title', 'author__name']
+
+    # Ordering: /books/?ordering=title  OR  /books/?ordering=-publication_year
+    ordering_fields = ['title', 'publication_year']
+    ordering = ['title']  # default ordering
+
 
 
 # GET /books/<id>/ — Retrieve a single Book
