@@ -1,15 +1,22 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+# blog/views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import RegisterForm
+
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from .models import Post
-from .forms import PostForm
 
-# User registration
+from .forms import RegisterForm, CommentForm, PostForm
+from .models import Post, Comment
+
+
+# -------------------------------
+# USER AUTHENTICATION
+# -------------------------------
+
+# Register
 def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -19,32 +26,37 @@ def register_view(request):
             messages.success(request, "Registration successful.")
             return redirect('home')
         else:
-            messages.error(request, "Registration failed. Please correct the errors below.")
+            messages.error(request, "Registration failed. Please correct the errors.")
     else:
         form = RegisterForm()
     return render(request, 'blog/register.html', {'form': form})
 
-# User login
+
+# Login
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
         user = authenticate(request, username=username, password=password)
-        if user is not None:
+        if user:
             login(request, user)
             messages.success(request, "Login successful.")
             return redirect('home')
         else:
-            messages.error(request, "Invalid username or password.")
+            messages.error(request, "Invalid credentials.")
+
     return render(request, 'blog/login.html')
 
-# User logout
+
+# Logout
 def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect('home')
 
-# Profile management
+
+# Profile
 @login_required
 def profile_view(request):
     if request.method == 'POST':
@@ -53,18 +65,19 @@ def profile_view(request):
         request.user.save()
         messages.success(request, "Profile updated successfully.")
         return redirect('profile')
+
     return render(request, 'blog/profile.html')
 
 
-
+# Home page
 def home_view(request):
-    return render(request, 'blog/home.html')  # Make sure this template exists
+    return render(request, 'blog/home.html')
 
 
+# -------------------------------
+# BLOG POST VIEWS
+# -------------------------------
 
-
-
-# List all posts
 class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
@@ -72,13 +85,19 @@ class PostListView(ListView):
     ordering = ['-created_at']
     paginate_by = 5
 
-# Post detail view
+
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
 
-# Create a new post
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = CommentForm()
+        context['comments'] = Comment.objects.filter(post=self.object).order_by('-created_at')
+        return context
+
+
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
@@ -88,7 +107,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-# Update a post
+
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
@@ -98,7 +117,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         post = self.get_object()
         return self.request.user == post.author
 
-# Delete a post
+
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name = 'blog/post_confirm_delete.html'
@@ -107,3 +126,54 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
+
+
+# -------------------------------
+# COMMENTS
+# -------------------------------
+
+@login_required
+def comment_create_view(request, post_pk):
+    post = get_object_or_404(Post, pk=post_pk)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, "Comment added successfully.")
+            return redirect('post-detail', pk=post.pk)
+        else:
+            messages.error(request, "Please fix the errors below.")
+    
+    else:
+        form = CommentForm()
+
+    return render(request, 'blog/comment_form.html', {'form': form, 'post': post})
+
+
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
+
+
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/comment_confirm_delete.html'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
