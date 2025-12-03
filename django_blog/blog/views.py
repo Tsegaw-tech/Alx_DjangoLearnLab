@@ -1,4 +1,3 @@
-# blog/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -8,15 +7,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 
-from .forms import RegisterForm, CommentForm, PostForm
+from .forms import RegisterForm, PostForm, CommentForm
 from .models import Post, Comment
-
 
 # -------------------------------
 # USER AUTHENTICATION
 # -------------------------------
 
-# Register
 def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -32,12 +29,10 @@ def register_view(request):
     return render(request, 'blog/register.html', {'form': form})
 
 
-# Login
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
@@ -45,18 +40,15 @@ def login_view(request):
             return redirect('home')
         else:
             messages.error(request, "Invalid credentials.")
-
     return render(request, 'blog/login.html')
 
 
-# Logout
 def logout_view(request):
     logout(request)
     messages.success(request, "Logged out successfully.")
     return redirect('home')
 
 
-# Profile
 @login_required
 def profile_view(request):
     if request.method == 'POST':
@@ -65,17 +57,15 @@ def profile_view(request):
         request.user.save()
         messages.success(request, "Profile updated successfully.")
         return redirect('profile')
-
     return render(request, 'blog/profile.html')
 
 
-# Home page
 def home_view(request):
     return render(request, 'blog/home.html')
 
 
 # -------------------------------
-# BLOG POST VIEWS
+# POSTS CRUD
 # -------------------------------
 
 class PostListView(ListView):
@@ -114,8 +104,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'blog/post_form.html'
 
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.get_object().author == self.request.user
 
 
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -124,34 +113,27 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     success_url = reverse_lazy('post-list')
 
     def test_func(self):
-        post = self.get_object()
-        return self.request.user == post.author
+        return self.get_object().author == self.request.user
 
 
 # -------------------------------
-# COMMENTS
+# COMMENTS CRUD
 # -------------------------------
 
-@login_required
-def comment_create_view(request, post_pk):
-    post = get_object_or_404(Post, pk=post_pk)
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
 
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
-            comment.author = request.user
-            comment.save()
-            messages.success(request, "Comment added successfully.")
-            return redirect('post-detail', pk=post.pk)
-        else:
-            messages.error(request, "Please fix the errors below.")
-    
-    else:
-        form = CommentForm()
+    def form_valid(self, form):
+        post_pk = self.kwargs['post_pk']
+        form.instance.post = get_object_or_404(Post, pk=post_pk)
+        form.instance.author = self.request.user
+        messages.success(self.request, "Comment added successfully.")
+        return super().form_valid(form)
 
-    return render(request, 'blog/comment_form.html', {'form': form, 'post': post})
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.kwargs['post_pk']})
 
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -160,8 +142,7 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'blog/comment_form.html'
 
     def test_func(self):
-        comment = self.get_object()
-        return self.request.user == comment.author
+        return self.get_object().author == self.request.user
 
     def get_success_url(self):
         return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
@@ -172,29 +153,7 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     template_name = 'blog/comment_confirm_delete.html'
 
     def test_func(self):
-        comment = self.get_object()
-        return self.request.user == comment.author
+        return self.get_object().author == self.request.user
 
     def get_success_url(self):
         return reverse_lazy('post-detail', kwargs={'pk': self.object.post.pk})
-
-
-
-
-class CommentCreateView(LoginRequiredMixin, CreateView):
-    model = Comment
-    form_class = CommentForm
-    template_name = "blog/comment_form.html"
-
-    def form_valid(self, form):
-        post_pk = self.kwargs['post_pk']
-        post = get_object_or_404(Post, pk=post_pk)
-
-        form.instance.post = post
-        form.instance.author = self.request.user
-
-        messages.success(self.request, "Comment added successfully.")
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy('post-detail', kwargs={'pk': self.kwargs['post_pk']})
