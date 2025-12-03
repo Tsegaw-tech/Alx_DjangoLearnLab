@@ -7,10 +7,9 @@
 
 <hr>
 
-<h2>Comments ({{ post.comments.count }})</h2>
-
+<h2>Comments ({{ comments.count }})</h2>
 <div id="comments">
-  {% for comment in post.comments.all %}
+  {% for comment in comments %}
     <div class="comment">
       <p>{{ comment.content|linebreaks }}</p>
       <small>By {{ comment.author.username }} on {{ comment.created_at }}</small>
@@ -26,6 +25,13 @@
     <p>No comments yet. Be the first to comment!</p>
   {% endfor %}
 </div>
+
+<h3>Tags:</h3>
+{% for tag in post.tags.all %}
+    <a href="{% url 'posts-by-tag' tag.name %}">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+{% empty %}
+    No tags
+{% endfor %}
 
 {% if user.is_authenticated %}
   <h3>Add a comment</h3>

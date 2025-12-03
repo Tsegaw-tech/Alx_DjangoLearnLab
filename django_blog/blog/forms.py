@@ -1,33 +1,42 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-
+from taggit.forms import TagWidget
 from .models import Post, Comment
 
+# -------------------------------
+# User Registration Form
+# -------------------------------
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True, help_text="Required. Enter a valid email address.")
+    email = forms.EmailField(
+        required=True,
+        help_text="Required. Enter a valid email address."
+    )
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
-
-
-
+# -------------------------------
+# Post Form with Tags
+# -------------------------------
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'tags']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-input'}),
-            'content': forms.Textarea(attrs={'class': 'form-textarea'}),
+            'tags': TagWidget(),  # Allows comma-separated tags
         }
 
-
-
+# -------------------------------
+# Comment Form
+# -------------------------------
 class CommentForm(forms.ModelForm):
     content = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Leave a comment...'}),
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Leave a comment...'
+        }),
         label=''
     )
 
