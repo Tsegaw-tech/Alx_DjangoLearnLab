@@ -6,7 +6,6 @@ from django.db.models import Q
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-
 from .forms import RegisterForm, PostForm, CommentForm
 from .models import Post, Comment
 
@@ -160,3 +159,22 @@ def search_view(request):
 def posts_by_tag_view(request, tag_name):
     results = Post.objects.filter(tags__name__iexact=tag_name)
     return render(request, 'blog/tag_results.html', {'results': results, 'tag_name': tag_name})
+
+
+
+
+
+class PostByTagListView(ListView):
+    model = Post
+    template_name = 'blog/tag_results.html'
+    context_object_name = 'posts'
+    paginate_by = 5
+
+    def get_queryset(self):
+        tag_slug = self.kwargs.get('tag_slug')
+        return Post.objects.filter(tags__slug=tag_slug).distinct()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag_slug'] = self.kwargs.get('tag_slug')
+        return context
